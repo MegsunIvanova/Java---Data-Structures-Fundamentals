@@ -11,12 +11,13 @@ public class AirlinesManagerImpl implements AirlinesManager {
     private Map<String, Airline> airlinesById;
     private Map<String, Flight> flightsById;
     private Map<String, List<String>> airlinesSystem;
-//    private List<Flight> completedFlights;
+    private Map<String, Flight> completedFlights;
 
     public AirlinesManagerImpl() {
         this.airlinesById = new LinkedHashMap<>();
         this.flightsById = new LinkedHashMap<>();
         this.airlinesSystem = new LinkedHashMap<>();
+        this.completedFlights = new LinkedHashMap<>();
     }
 
     @Override
@@ -34,6 +35,10 @@ public class AirlinesManagerImpl implements AirlinesManager {
         flightsById.put(flight.getId(), flight);
 
         airlinesSystem.get(airline.getId()).add(flight.getId());
+
+        if (flight.isCompleted()) {
+            completedFlights.put(flight.getId(), flight);
+        }
     }
 
     @Override
@@ -56,7 +61,10 @@ public class AirlinesManagerImpl implements AirlinesManager {
 
         List<String> flightsForRemove = airlinesSystem.remove(airline.getId());
 
-        flightsForRemove.forEach(flightsById::remove);
+        flightsForRemove.forEach(f -> {
+            flightsById.remove(f);
+            completedFlights.remove(f);
+        });
     }
 
     @Override
@@ -75,15 +83,19 @@ public class AirlinesManagerImpl implements AirlinesManager {
 
         flightForCompleting.setCompleted(true);
 
+        completedFlights.put(flightForCompleting.getId(), flightForCompleting);
+
         return flightForCompleting;
     }
 
     @Override
     public Iterable<Flight> getCompletedFlights() {
         //bad performance
-        return flightsById.values().parallelStream()
-                .filter(Flight::isCompleted)
-                .collect(Collectors.toList());
+//        return flightsById.values().stream()
+//                .filter(Flight::isCompleted)
+//                .collect(Collectors.toList());
+        return completedFlights.values();
+
     }
 
     @Override
